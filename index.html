@@ -216,9 +216,10 @@
       width: 90px;
       border: 2px solid var(--stamp);
       border-radius: 3px;
-      font-size: 19px;
+      font-size: 25px;
       line-height: 31px;
-      letter-spacing: 1px;
+      letter-spacing: 5px;
+      padding-left: 5px;
       text-align: center;
     }
     .stamp .stars { position: absolute; top: -3px; font-size: 14px; letter-spacing: 2px; }
@@ -318,9 +319,9 @@
       <section id="detail" aria-labelledby="detail-title" hidden>
         <h1 class="page-title" id="detail-title" tabindex="-1">详情</h1>
         <section class="details" aria-label="请假详情">
-          <div class="stamp" aria-label="模拟审批通过">
+          <div class="stamp" aria-label="审批通过">
             <span class="stars" aria-hidden="true">★ ★ ★</span>
-            <strong>模拟通过</strong>
+            <strong>通过</strong>
             <span class="stars bottom" aria-hidden="true">★ ★ ★</span>
           </div>
           <dl class="fields">
@@ -341,7 +342,7 @@
           <div class="flow-entry">
             <span class="profile" aria-hidden="true"><span class="check">✓</span></span>
             <div>
-              <div class="approval"><span>通过</span><time id="approved-at" hidden></time></div>
+              <div class="approval"><span>章红燕 通过</span><time id="approved-at" hidden></time></div>
               <p>审批意见：通过</p>
             </div>
           </div>
