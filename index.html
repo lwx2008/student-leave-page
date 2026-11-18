@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>学生请假</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #fff;
+      --background: #f5f4f9;
+      --line: #dedede;
+      --ink: #101010;
+      --secondary: #666;
+      --value: #999;
+      --teal: #26a59a;
+      --approved: #85cba5;
+      --duration: #087b12;
+      --off-campus: #3d36bb;
+      --profile: #919bfa;
+      --focus: #164bb1;
+      --stamp: #a5ddb0;
+      --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      --numbers: "Times New Roman", "Songti SC", serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--background);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+      overflow-x: clip;
+    }
+    body {
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+    .shell {
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      max-width: 512px;
+      height: 100vh;
+      height: 100dvh;
+      margin-inline: auto;
+    }
+    [hidden] { display: none !important; }
+    .viewport { min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+    .filter-control { position: relative; }
+    .filter-control select {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .filter-control:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+    .filter-value { display: flex; min-height: 44px; padding-left: 12px; align-items: center; }
+    .empty { margin: 0; padding: 20px 15px; background: var(--paper); color: var(--secondary); }
+    .navigation {
+      display: flex;
+      justify-content: center;
+      gap: 44px;
+      min-height: 50px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: #f7f7f7;
+      border-top: 1px solid var(--line);
+    }
+    .navigation button {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      min-height: 48px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .navigation button:disabled { color: #b0b0b0; cursor: default; }
+    .navigation button:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+    .navigation button::before {
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid currentColor;
+      border-right: 2px solid currentColor;
+      content: "";
+      transform: rotate(45deg);
+    }
+    .navigation #back::before { transform: rotate(-135deg); }
+    .page-title {
+      display: grid;
+      place-items: center;
+      min-height: 46px;
+      margin: 0;
+      padding: 6px 15px;
+      background: var(--teal);
+      color: var(--paper);
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1.3;
+      text-align: center;
+    }
+    a:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      height: 44px;
+      background: var(--paper);
+      color: var(--secondary);
+      font-size: 14px;
+      line-height: 20px;
+      text-align: center;
+    }
+    .tabs span { padding: 12px 2px 10px; border-bottom: 1px solid var(--line); }
+    .tabs strong { padding: 12px 2px 8px; border-bottom: 2px solid var(--teal); color: var(--teal); font-weight: 400; }
+    .scope {
+      display: flex;
+      min-height: 45px;
+      padding: 0 15px;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper);
+    }
+    .filter-value { color: var(--value); }
+    .filter-value::after {
+      width: 7px; height: 7px;
+      margin-left: 9px;
+      border: solid var(--line);
+      border-width: 2px 2px 0 0;
+      content: "";
+      transform: rotate(45deg);
+    }
+    .record-list { display: grid; gap: 20px; padding: 0; margin: 0; list-style: none; }
+    .record {
+      position: relative;
+      display: block;
+      min-height: 149px;
+      padding: 18px 15px 19px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--secondary);
+      font-size: 14px;
+      line-height: 21px;
+      text-decoration: none;
+    }
+    .record-heading, .record-footer {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 2px 8px;
+    }
+    .record-heading { margin-right: 13px; }
+    .record-heading time { color: var(--value); font-size: 12px; }
+    .record p { margin: 0 8px; }
+    .record-footer { margin-left: 8px; margin-right: 5px; color: #53a5ac; }
+    .record-footer .campus { color: var(--off-campus); }
+    .status { color: var(--approved); font-weight: 400; }
+    time, .duration-value { font-family: var(--numbers); font-variant-numeric: tabular-nums; }
+    time { white-space: nowrap; }
+    .record::after {
+      position: absolute;
+      top: 50%; right: 17px;
+      width: 7px; height: 7px;
+      border: solid #c4c5c9;
+      border-width: 2px 2px 0 0;
+      content: "";
+      transform: translateY(-50%) rotate(45deg);
+    }
+    .details, .flow { background: var(--paper); }
+    .details { position: relative; }
+    .fields { margin: 0; padding: 0 15px; }
+    .field {
+      display: flex;
+      min-height: 44px;
+      padding: 9px 0;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 4px 8px;
+      border-bottom: 1px solid var(--line);
+      line-height: 25px;
+    }
+    .field:last-child { min-height: 50px; border: 0; }
+    .field dd { margin: 0 0 0 auto; color: var(--value); text-align: right; }
+    .field.stacked { display: block; min-height: 68px; }
+    .field.stacked dd { margin-top: 0; text-align: left; color: var(--secondary); }
+    .field.duration { justify-content: flex-start; gap: 0 5px; color: var(--secondary); }
+    .field.duration dd { margin: 0; color: var(--secondary); }
+    .duration-value { color: var(--duration); }
+    .stamp {
+      position: absolute;
+      top: 24px; right: 33px;
+      display: grid;
+      place-items: center;
+      width: 76px; height: 76px;
+      border: 2px solid var(--stamp);
+      border-radius: 50%;
+      color: var(--stamp);
+      opacity: .8;
+      transform: rotate(-32deg);
+      pointer-events: none;
+    }
+    .stamp::before {
+      position: absolute;
+      inset: 7px;
+      border: 1.5px solid var(--stamp);
+      border-radius: 50%;
+      content: "";
+    }
+    .stamp strong {
+      z-index: 1;
+      width: 90px;
+      border: 2px solid var(--stamp);
+      border-radius: 3px;
+      font-size: 25px;
+      line-height: 31px;
+      letter-spacing: 5px;
+      padding-left: 5px;
+      text-align: center;
+    }
+    .stamp .stars { position: absolute; top: -3px; font-size: 14px; letter-spacing: 2px; }
+    .stamp .stars.bottom { top: auto; bottom: -3px; }
+    .flow { padding: 10px 15px 9px; border-top: 1px solid var(--line); }
+    .flow h2 { margin: 0 0 10px; font-size: 16px; font-weight: 400; line-height: 20px; }
+    .flow-entry { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start; }
+    .profile { position: relative; height: 40px; border-radius: 4px; background: var(--profile); }
+    .profile::before, .profile::after {
+      position: absolute; left: 50%;
+      border: 1.5px solid var(--paper);
+      content: ""; transform: translateX(-50%);
+    }
+    .profile::before { top: 7px; width: 10px; height: 10px; border-radius: 50%; }
+    .profile::after { top: 23px; width: 20px; height: 6px; border-radius: 50% 50% 4px 4px; }
+    .profile .check {
+      position: absolute; z-index: 1; right: -1px; bottom: 0;
+      display: grid; place-items: center;
+      width: 16px; height: 16px;
+      border: 1px solid var(--paper); border-radius: 50%;
+      background: #36ba98; color: var(--paper);
+      font-size: 13px; line-height: 1;
+    }
+    .approval { display: flex; align-items: baseline; justify-content: space-between; gap: 2px 6px; font-size: 14px; line-height: 20px; }
+    .approval .status { color: var(--ink); }
+    .approval time { color: #bbb; font-size: 12px; }
+    .flow p { margin: 0; font-size: 13px; line-height: 18px; }
+    @media (max-width: 359px) {
+      .record p { margin-inline: 0; }
+      .field { flex-wrap: wrap; }
+      .approval { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main class="viewport" id="viewport">
+      <section id="records" aria-labelledby="records-title">
+        <h1 class="page-title" id="records-title" tabindex="-1">学生请假</h1>
+        <div class="tabs" aria-label="界面栏目"><span>请假</span><span>销假</span><strong>请假记录</strong></div>
+        <label class="scope" for="status">
+          <span>申请状态</span>
+          <span class="filter-control">
+            <span class="filter-value" id="filter-value" aria-hidden="true">全部</span>
+            <select id="status">
+              <option value="all">全部</option>
+              <option value="approved">审核通过</option>
+              <option value="pending">待审核</option>
+              <option value="rejected">未通过</option>
+            </select>
+          </span>
+        </label>
+        <ul class="record-list" id="record-list">
+    <li>
+      <a class="record" href="#leave-today">
+        <div class="record-heading"><span class="status">审核通过</span><time class="record-date" datetime="2026-11-18">2026-11-18</time></div>
+        <p>请假类型:事假</p>
+        <p>开始时间:<time class="record-start" datetime="2026-11-18T14:00:00+08:00">2026-11-18 14:00</time></p>
+        <p>结束时间:<time class="record-end" datetime="2026-11-18T15:05:00+08:00">2026-11-18 15:05</time></p>
+        <div class="record-footer"><span>时长:<span class="record-duration">0.1</span> 天</span><span class="campus">需要离校</span></div>
+      </a>
+    </li>
+  
+    <li>
+      <a class="record" href="#leave-nov-10">
+        <div class="record-heading"><span class="status">审核通过</span><time class="record-date" datetime="2026-11-10">2026-11-10</time></div>
+        <p>请假类型:事假</p>
+        <p>开始时间:<time class="record-start" datetime="2026-11-10T16:00:00+08:00">2026-11-10 16:00</time></p>
+        <p>结束时间:<time class="record-end" datetime="2026-11-10T17:00:00+08:00">2026-11-10 17:00</time></p>
+        <div class="record-footer"><span>时长:<span class="record-duration">0</span> 天</span><span class="campus">需要离校</span></div>
+      </a>
+    </li>
+  
+    <li>
+      <a class="record" href="#leave-nov-09">
+        <div class="record-heading"><span class="status">审核通过</span><time class="record-date" datetime="2026-11-09">2026-11-09</time></div>
+        <p>请假类型:事假</p>
+        <p>开始时间:<time class="record-start" datetime="2026-11-09T17:00:00+08:00">2026-11-09 17:00</time></p>
+        <p>结束时间:<time class="record-end" datetime="2026-11-09T18:00:00+08:00">2026-11-09 18:00</time></p>
+        <div class="record-footer"><span>时长:<span class="record-duration">0</span> 天</span><span class="campus">需要离校</span></div>
+      </a>
+    </li>
+  
+    <li>
+      <a class="record" href="#leave-nov-03">
+        <div class="record-heading"><span class="status">审核通过</span><time class="record-date" datetime="2026-11-03">2026-11-03</time></div>
+        <p>请假类型:事假</p>
+        <p>开始时间:<time class="record-start" datetime="2026-11-03T16:00:00+08:00">2026-11-03 16:00</time></p>
+        <p>结束时间:<time class="record-end" datetime="2026-11-03T17:00:00+08:00">2026-11-03 17:00</time></p>
+        <div class="record-footer"><span>时长:<span class="record-duration">0</span> 天</span><span class="campus">需要离校</span></div>
+      </a>
+    </li>
+  </ul>
+        <p class="empty" id="empty" hidden>此状态下暂无记录。</p>
+      </section>
+
+      <section id="detail" aria-labelledby="detail-title" hidden>
+        <h1 class="page-title" id="detail-title" tabindex="-1">详情</h1>
+        <section class="details" aria-label="请假详情">
+          <div class="stamp" aria-label="通过">
+            <span class="stars" aria-hidden="true">★ ★ ★</span>
+            <strong>通过</strong>
+            <span class="stars bottom" aria-hidden="true">★ ★ ★</span>
+          </div>
+          <dl class="fields">
+            <div class="field"><dt>学生</dt><dd>刘文霞</dd></div>
+            <div class="field"><dt>开始时间</dt><dd><time id="start"></time></dd></div>
+            <div class="field"><dt>结束时间</dt><dd><time id="end"></time></dd></div>
+            <div class="field duration"><dt>请假天数</dt><dd><span class="duration-value" id="duration"></span> 天</dd></div>
+            <div class="field"><dt>请假类别</dt><dd>事假</dd></div>
+            <div class="field"><dt>离校状态</dt><dd>需要离校</dd></div>
+            <div class="field stacked"><dt>请假事由</dt><dd id="reason"></dd></div>
+            <div class="field"><dt>请假备注</dt><dd></dd></div>
+            <div class="field"><dt>创建时间</dt><dd><time id="created" hidden></time></dd></div>
+            <div class="field"><dt>证明材料</dt><dd></dd></div>
+          </dl>
+        </section>
+        <section class="flow" aria-labelledby="flow-title">
+          <h2 id="flow-title">流程</h2>
+          <div class="flow-entry">
+            <span class="profile" aria-hidden="true"><span class="check">✓</span></span>
+            <div>
+              <div class="approval"><span>通过</span><time id="approved-at" hidden></time></div>
+              <p>审批意见：通过</p>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <nav class="navigation" aria-label="页面导航">
+      <button type="button" id="back" aria-label="返回" disabled></button>
+      <button type="button" id="forward" aria-label="前进" disabled></button>
+    </nav>
+  </div>
+  <template id="record-template">
+    <li>
+      <a class="record">
+        <div class="record-heading"><span class="status">审核通过</span><time class="record-date"></time></div>
+        <p>请假类型:事假</p>
+        <p>开始时间:<time class="record-start"></time></p>
+        <p>结束时间:<time class="record-end"></time></p>
+        <div class="record-footer"><span>时长:<span class="record-duration"></span> 天</span><span class="campus">需要离校</span></div>
+      </a>
+    </li>
+  </template>
+  <script>
+    const entries = [
+      { id: 'today', start: '14:00', end: '15:05', days: '0.1', reason: '健身', created: '14:04', approved: '14:09' },
+      { id: 'nov-10', date: '2026-11-10', start: '16:00', end: '17:00', days: '0' },
+      { id: 'nov-09', date: '2026-11-09', start: '17:00', end: '18:00', days: '0' },
+      { id: 'nov-03', date: '2026-11-03', start: '16:00', end: '17:00', days: '0' }
+    ];
+    const get = id => document.getElementById(id);
+    const viewport = get('viewport');
+    const status = get('status');
+    const list = get('record-list');
+    const back = get('back');
+    const forward = get('forward');
+    const scrollPositions = new Map();
+    const dateFormat = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
+    });
+    let displayedDate = dateFormat.format(new Date());
+    let pageIndex = history.state?.leaveIndex ?? 0;
+    let furthestIndex = pageIndex;
+    history.replaceState({ leaveIndex: pageIndex }, '');
+    history.scrollRestoration = 'manual';
+
+    function currentEntry() {
+      return entries.find(entry => location.hash === '#leave-' + entry.id);
+    }
+
+    function formatTime(element, date, clock) {
+      element.dateTime = clock ? date + 'T' + clock + ':00+08:00' : date;
+      element.textContent = clock ? date + ' ' + clock : date;
+    }
+
+    function renderList() {
+      const records = status.value === 'all' || status.value === 'approved' ? entries : [];
+      const content = document.createDocumentFragment();
+      for (const entry of records) {
+        const item = get('record-template').content.cloneNode(true);
+        item.querySelector('a').href = '#leave-' + entry.id;
+        const date = entry.date ?? displayedDate;
+        formatTime(item.querySelector('.record-date'), date);
+        formatTime(item.querySelector('.record-start'), date, entry.start);
+        formatTime(item.querySelector('.record-end'), date, entry.end);
+        item.querySelector('.record-duration').textContent = entry.days;
+        content.append(item);
+      }
+      list.replaceChildren(content);
+      get('empty').hidden = records.length > 0;
+      get('filter-value').textContent = status.selectedOptions[0].label;
+    }
+
+    function renderDetail(entry) {
+      const date = entry.date ?? displayedDate;
+      formatTime(get('start'), date, entry.start);
+      formatTime(get('end'), date, entry.end);
+      get('duration').textContent = entry.days;
+      get('reason').textContent = entry.reason ?? '';
+      get('created').hidden = !entry.created;
+      if (entry.created) formatTime(get('created'), date, entry.created);
+      get('approved-at').hidden = !entry.approved;
+      if (entry.approved) formatTime(get('approved-at'), date, entry.approved);
+    }
+
+    function showPage(focusHeading = false) {
+      const entry = currentEntry();
+      get('records').hidden = Boolean(entry);
+      get('detail').hidden = !entry;
+      if (entry) renderDetail(entry);
+      back.disabled = pageIndex === 0 && !entry;
+      forward.disabled = pageIndex >= furthestIndex;
+      if (focusHeading) get(entry ? 'detail-title' : 'records-title').focus({ preventScroll: true });
+      viewport.scrollTop = scrollPositions.get(pageIndex) ?? 0;
+    }
+
+    function refreshDate() {
+      const current = dateFormat.format(new Date());
+      if (current === displayedDate) return;
+      displayedDate = current;
+      renderList();
+      const entry = currentEntry();
+      if (entry) renderDetail(entry);
+    }
+
+    list.addEventListener('click', event => {
+      const link = event.target.closest('a');
+      if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      scrollPositions.set(pageIndex, viewport.scrollTop);
+      pageIndex += 1;
+      furthestIndex = pageIndex;
+      scrollPositions.delete(pageIndex);
+      history.pushState({ leaveIndex: pageIndex }, '', link.hash);
+      showPage(true);
+    });
+    status.addEventListener('change', () => {
+      renderList();
+      viewport.scrollTop = 0;
+    });
+    back.addEventListener('click', () => {
+      if (pageIndex > 0) {
+        history.back();
+      } else if (currentEntry()) {
+        history.replaceState({ leaveIndex: 0 }, '', '#records');
+        showPage(true);
+      }
+    });
+    forward.addEventListener('click', () => history.forward());
+    window.addEventListener('popstate', event => {
+      scrollPositions.set(pageIndex, viewport.scrollTop);
+      pageIndex = event.state?.leaveIndex ?? 0;
+      showPage(true);
+    });
+    window.addEventListener('pageshow', refreshDate);
+    document.addEventListener('visibilitychange', refreshDate);
+    window.setInterval(refreshDate, 30000);
+    renderList();
+    showPage();
+  </script>
+</body>
+</html>
