@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex">
-  <title>学生请假</title>
+  <title>学生请假 · 课堂练习</title>
   <style>
     :root {
       color-scheme: light;
@@ -120,7 +120,7 @@
     .scope {
       display: flex;
       min-height: 45px;
-      padding: 0 15px;
+      padding: 0 17px 0 15px;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--line);
@@ -129,7 +129,7 @@
     .filter-value { color: var(--value); }
     .filter-value::after {
       width: 7px; height: 7px;
-      margin-left: 9px;
+      margin-left: 5px;
       border: solid var(--line);
       border-width: 2px 2px 0 0;
       content: "";
@@ -140,8 +140,8 @@
       position: relative;
       display: block;
       min-height: 149px;
-      padding: 18px 15px 19px;
-      border-bottom: 1px solid var(--line);
+      padding: 16px 15px 21px;
+      border-bottom: 0.5px solid var(--line);
       background: var(--paper);
       color: var(--secondary);
       font-size: 14px;
@@ -173,15 +173,15 @@
     }
     .details, .flow { background: var(--paper); }
     .details { position: relative; }
-    .fields { margin: 0; padding: 0 15px; }
+    .fields { margin: 0; padding: 0 0 0 15px; }
     .field {
       display: flex;
       min-height: 44px;
-      padding: 9px 0;
+      padding: 9px 15px 9px 0;
       align-items: baseline;
       justify-content: space-between;
       gap: 4px 8px;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 0.5px solid var(--line);
       line-height: 25px;
     }
     .field:last-child { min-height: 50px; border: 0; }
@@ -216,15 +216,14 @@
       width: 90px;
       border: 2px solid var(--stamp);
       border-radius: 3px;
-      font-size: 25px;
+      font-size: 19px;
       line-height: 31px;
-      letter-spacing: 5px;
-      padding-left: 5px;
+      letter-spacing: 1px;
       text-align: center;
     }
     .stamp .stars { position: absolute; top: -3px; font-size: 14px; letter-spacing: 2px; }
     .stamp .stars.bottom { top: auto; bottom: -3px; }
-    .flow { padding: 10px 15px 9px; border-top: 1px solid var(--line); }
+    .flow { padding: 10px 15px 9px; border-top: 0.5px solid var(--line); }
     .flow h2 { margin: 0 0 10px; font-size: 16px; font-weight: 400; line-height: 20px; }
     .flow-entry { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start; }
     .profile { position: relative; height: 40px; border-radius: 4px; background: var(--profile); }
@@ -258,7 +257,7 @@
   <div class="shell">
     <main class="viewport" id="viewport">
       <section id="records" aria-labelledby="records-title">
-        <h1 class="page-title" id="records-title" tabindex="-1">学生请假</h1>
+        <h1 class="page-title" id="records-title" tabindex="-1">学生请假 · 课堂练习</h1>
         <div class="tabs" aria-label="界面栏目"><span>请假</span><span>销假</span><strong>请假记录</strong></div>
         <label class="scope" for="status">
           <span>申请状态</span>
@@ -319,9 +318,9 @@
       <section id="detail" aria-labelledby="detail-title" hidden>
         <h1 class="page-title" id="detail-title" tabindex="-1">详情</h1>
         <section class="details" aria-label="请假详情">
-          <div class="stamp" aria-label="通过">
+          <div class="stamp" aria-label="模拟审批通过">
             <span class="stars" aria-hidden="true">★ ★ ★</span>
-            <strong>通过</strong>
+            <strong>模拟通过</strong>
             <span class="stars bottom" aria-hidden="true">★ ★ ★</span>
           </div>
           <dl class="fields">
@@ -342,14 +341,14 @@
           <div class="flow-entry">
             <span class="profile" aria-hidden="true"><span class="check">✓</span></span>
             <div>
-              <div class="approval"><span>通过</span><time id="approved-at" hidden></time></div>
+              <div class="approval"><span>模拟账号验证通过</span><time id="approved-at" hidden></time></div>
               <p>审批意见：通过</p>
             </div>
           </div>
         </section>
       </section>
     </main>
-    <nav class="navigation" aria-label="页面导航">
+    <nav class="navigation" id="page-navigation" aria-label="页面导航">
       <button type="button" id="back" aria-label="返回" disabled></button>
       <button type="button" id="forward" aria-label="前进" disabled></button>
     </nav>
@@ -376,8 +375,12 @@
     const viewport = get('viewport');
     const status = get('status');
     const list = get('record-list');
+    const navigation = get('page-navigation');
     const back = get('back');
     const forward = get('forward');
+    const isWechatOnIPhone = location.protocol === 'https:'
+      && /iPhone/i.test(navigator.userAgent)
+      && /MicroMessenger/i.test(navigator.userAgent);
     const scrollPositions = new Map();
     const dateFormat = new Intl.DateTimeFormat('sv-SE', {
       timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -432,6 +435,8 @@
       get('records').hidden = Boolean(entry);
       get('detail').hidden = !entry;
       if (entry) renderDetail(entry);
+      // Keep a return button if the details were opened directly.
+      navigation.hidden = isWechatOnIPhone && (!entry || pageIndex > 0);
       back.disabled = pageIndex === 0 && !entry;
       forward.disabled = pageIndex >= furthestIndex;
       if (focusHeading) get(entry ? 'detail-title' : 'records-title').focus({ preventScroll: true });
